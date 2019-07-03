@@ -1,0 +1,26 @@
+{
+  "name": "dummy_instagram_app",
+  "version": "1.0.0",
+  "description": "This application will be a REST API set up with express that will allow a user to send REST calls to sign up for an account and begin \"posting pictures\" with captions.",
+  "main": "index.js",
+  "scripts": {
+    "start": "env-cmd -f ./config/env/dev.env nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seancrim23/dummy_instagram_app.git"
+  },
+  "author": "Sean Crim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/seancrim23/dummy_instagram_app/issues"
+  },
+  "homepage": "https://github.com/seancrim23/dummy_instagram_app#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "env-cmd": "^9.0.3",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.6.3"
+  }
+}
