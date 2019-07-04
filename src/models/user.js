@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { validateEmail } = require('../utils/utils');
 const Schema = mongoose.Schema;
 
@@ -30,27 +31,34 @@ const userSchema = new Schema({
     tokens: [{
         token: {
             type: String,
-            trim: true
+            required: true
         }
     }]
 });
 
 userSchema.static.compareCredentials = async (username, password) => {
-    try{
-        const user = await User.findOne({ username });
-        if(!user){
-            throw new Error('Error with login! Please check your username/password!');
-        }
-
-        const isCorrectUser = await bcrypt.compare(user.password, password);
-        if(!isCorrectUser){
-            throw new Error('Error with login! Please check your username/password!');
-        }
-
-        //if both succeed then generate a token for the user logging in
-    }catch(e){
-
+    const user = await User.findOne({ username });
+    if(!user){
+        throw new Error('Error with login! Please check your username/password!');
     }
+
+    const isCorrectUser = await bcrypt.compare(user.password, password);
+    if(!isCorrectUser){
+        throw new Error('Error with login! Please check your username/password!');
+    }
+
+    return user;
+};
+
+userSchema.methods.generateAuthToken = async function(){
+    const user = this;
+
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
+    user.tokens = user.tokens.concat({ token });
+    
+    await user.save();
+
+    return token;
 };
 
 userSchema.pre('save', async function(next){
