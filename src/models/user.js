@@ -28,12 +28,22 @@ const userSchema = new Schema({
             message: props => `${props.value} is not a valid email address!`
         }
     },
+    bio: {
+        type:String,
+        trim: true
+    },
     tokens: [{
         token: {
             type: String,
             required: true
         }
     }]
+});
+
+userSchema.virtual('posts', {
+    ref: 'Post',
+    localField: '_id',
+    foreignField: 'poster'
 });
 
 userSchema.static.compareCredentials = async (username, password) => {
