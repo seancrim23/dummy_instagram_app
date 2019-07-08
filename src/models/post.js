@@ -7,7 +7,12 @@ const postSchema = new Schema({
     poster: {
         type: Schema.Types.ObjectId,
         ref: 'User'
-    }
+    },
+    likes: [{
+        like: {
+            type: Schema.Types.ObjectId
+        }
+    }]
 });
 
 const Post = mongoose.model('Post', postSchema);

@@ -1,5 +1,6 @@
 const express = require('express');
 const Post = require('../models/post');
+const User = require('../models/user');
 const auth = require('../middleware/auth');
 const router = express.Router();
 
@@ -43,6 +44,43 @@ router.get('/posts/:id', auth, async (req, res) => {
         res.status(500).send(e);
     }
 
+});
+
+router.get('/posts/likes/:id', async (req, res) => {
+
+    try{
+        const post = await Post.findOne({ _id: req.params.id });
+        if(!post){
+            return res.status(404).send('Cannot find the post!');
+        }
+
+        const userLikes = await Promise.all(post.likes.map(async (like) => {
+            const user = await User.findOne({ _id: like.like });
+            if(user){
+                return user.username;
+            }
+        }));
+        res.send(userLikes);
+    }catch(e){
+        res.status(500).send(e);
+    }
+
+});
+
+router.get('/posts/get/:username', async (req, res) => {
+    try{
+        const user = await User.findOne({ username: req.params.username });
+        if(!user){
+            return res.status(404).send('Cannot find the user!');
+        }
+
+        await user.populate({
+            path: 'posts'
+        }).execPopulate();
+        res.send(user.posts);
+    }catch(e){
+        res.status(500).send(e.stack);
+    }
 });
 
 router.patch('/posts/:id', auth, async (req, res) => {

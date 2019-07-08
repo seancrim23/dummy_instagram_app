@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validateEmail } = require('../utils/utils');
+const Post = require('./post');
 const Schema = mongoose.Schema;
 
 const userSchema = new Schema({
@@ -36,6 +37,11 @@ const userSchema = new Schema({
         token: {
             type: String,
             required: true
+        }
+    }],
+    likes: [{
+        like: {   
+            type: Schema.Types.ObjectId
         }
     }]
 });
@@ -80,6 +86,24 @@ userSchema.pre('save', async function(next){
 
     next();
 });
+
+userSchema.pre('remove', async function(next){
+    const user = this;
+
+    await Post.deleteMany({ owner: user._id });
+
+    next();
+});
+
+userSchema.methods.toJSON = function() {
+    const user = this;
+    const userObject = user.toObject();
+
+    delete userObject.password;
+    delete userObject.tokens;
+
+    return userObject;
+};
 
 const User = mongoose.model('User', userSchema);
 

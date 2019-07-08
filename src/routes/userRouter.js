@@ -1,5 +1,6 @@
 const express = require('express');
 const User = require('../models/user');
+const Post = require('../models/post');
 const auth = require('../middleware/auth');
 const router = express.Router();
 
@@ -14,8 +15,61 @@ router.post('/users', async (req, res) => {
     }
 });
 
+router.post('/users/like/:id', auth, async (req, res) => {
+
+    try{
+        const igPost = await Post.findOne({ _id: req.params.id });
+        if(!igPost){
+            return res.status(404).send('Cannot find post!');
+        }
+
+        var alreadyLiked = req.user.likes.map(like => like.like.equals(igPost._id));
+        if(alreadyLiked.includes(true)){
+            return res.status(400).send('User has already liked this one!');
+        }
+
+        req.user.likes.push({ like: igPost._id });
+        await req.user.save();
+        igPost.likes.push({ like: req.user._id });
+        await igPost.save();
+
+        res.send(req.user);
+    }catch(e){
+        res.status(500).send(e.stack);
+    }
+
+});
+
+router.get('/users/like', auth, async (req, res) => {
+
+    try{
+        const likedPosts = await Promise.all(req.user.likes.map(async (like) => {
+            const oneLike = await Post.findOne({ _id: like.like });
+            if(oneLike){
+                return {
+                    image: oneLike.image,
+                    caption: oneLike.caption
+                };
+            }
+        }));    
+        res.send(likedPosts);
+    }catch(e){
+        res.status(500).send(e);
+    }
+
+});
+
 router.get('/users/me', auth, async (req, res) => {
     res.send(req.user);
+});
+
+router.get('/users', async (req, res) => {
+    try{
+        const users = await User.find();
+        res.send(users);
+    }catch(e){
+        res.status(500).send(e);
+    }
 });
 
 /**
@@ -54,6 +108,20 @@ router.post('/users/logout', auth, async (req, res) => {
         res.send();
     }catch(e){
         res.status(500).send({ error: 'Error logging out!' });
+    }
+});
+
+router.delete('/users', auth, async (req, res) => {
+    try{
+        const user = await User.findOne({ _id: req.user._id });
+        if(!user){
+            return new Error('Cannot find user for delete!');
+        }
+
+        await user.delete();
+        res.send(user);
+    }catch(e){
+        res.status(500).send(e);
     }
 });
 
